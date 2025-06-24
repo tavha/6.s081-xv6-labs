@@ -687,8 +687,11 @@ procdump(void)
 }
 
 int trace(int n){
-  //printf("trace fun");
+  if(n == 0){
+    myproc()->trenable = 0;
+    return 0;
+  }
   myproc()->trenable = 1;
   myproc()->mask = n;
-  return myproc()->trenable;
+  return 1;
 }

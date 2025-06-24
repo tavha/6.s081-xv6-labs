@@ -7,9 +7,10 @@
 void functrace(int mask, char *proc, char *argv[]){
      trace(mask);
      if(fork() == 0){
+         close(1);                // for testing code don't show any output on stdout ( but "write" may return -1
          exec(proc, argv);
      }
-     //wait(0);
+     wait(0);
 }
 
 int main(int argc, char *argv[]){
@@ -35,6 +36,8 @@ int main(int argc, char *argv[]){
             functrace(i, argv[2], argvlev);
         }
     }
+    
+    trace(0);
     exit(0);
 }
 
