@@ -79,13 +79,6 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
-// for trace syscall
-struct trarr{
-  int  pid;         // process id
-  char sysname[7];  // syscall name
-  int  rtval;       // return value of syscall
-};
-
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
@@ -111,10 +104,5 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  
-  int trenable;                // trace enable
-  
   int mask;                    // trace mask
 };
-
-

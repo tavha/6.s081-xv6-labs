@@ -1,44 +1,27 @@
+#include "kernel/param.h"
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-#include "kernel/param.h"
 
+int
+main(int argc, char *argv[])
+{
+  int i;
+  char *nargv[MAXARG];
 
-void functrace(int mask, char *proc, char *argv[]){
-     trace(mask);
-     if(fork() == 0){
-         close(1);                // for testing code don't show any output on stdout ( but "write" may return -1
-         exec(proc, argv);
-     }
-     wait(0);
+  if(argc < 3 || (argv[1][0] < '0' || argv[1][0] > '9')){
+    fprintf(2, "Usage: %s mask command\n", argv[0]);
+    exit(1);
+  }
+
+  if (trace(atoi(argv[1])) < 0) {
+    fprintf(2, "%s: trace failed\n", argv[0]);
+    exit(1);
+  }
+  
+  for(i = 2; i < argc && i < MAXARG; i++){
+    nargv[i-2] = argv[i];
+  }
+  exec(nargv[0], nargv);
+  exit(0);
 }
-
-int main(int argc, char *argv[]){
-    int mask[22];
-    char *argvlev[MAXARG];
-    memset(mask, 0, 22);
-    uint64 bits = atoi(argv[1]);
-    
-    int i = 0;
-    while(bits > 0){
-        mask[i++] = bits % 2;
-        bits /= 2;
-    }
-    
-    for(int j = 3; j < argc; j++){
-        argvlev[j - 3] = malloc(512);
-        strcpy(argvlev[j - 3], argv[j]);
-    }
-    
-    
-    for(i = 0; i < 22; i++){
-        if(mask[i]){
-            functrace(i, argv[2], argvlev);
-        }
-    }
-    
-    trace(0);
-    exit(0);
-}
-
-

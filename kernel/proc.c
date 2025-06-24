@@ -304,7 +304,6 @@ fork(void)
   
   // trace syscall needed
   np->mask = p->mask;
-  np->trenable = p->trenable;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -687,11 +686,6 @@ procdump(void)
 }
 
 int trace(int n){
-  if(n == 0){
-    myproc()->trenable = 0;
-    return 0;
-  }
-  myproc()->trenable = 1;
   myproc()->mask = n;
-  return 1;
+  return 0;
 }
