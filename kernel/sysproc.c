@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -96,4 +97,18 @@ uint64 sys_trace(void){
   int n;
   argint(0, &n);
   return trace(n);
+}
+
+uint64 sys_sysinfo(void){
+  struct sysinfo s;
+  uint64 uaddr;
+  argaddr(0, &uaddr);
+  if(uaddr > 0x86400000){
+    return -1;
+  }
+  sysinfo(&s);
+  if(copyout(myproc()->pagetable, uaddr, (char *)&s, sizeof(s)) < 0){
+    return -1;
+  };
+  return 0;
 }
