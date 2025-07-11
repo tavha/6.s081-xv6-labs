@@ -131,6 +131,14 @@ found:
     release(&p->lock);
     return 0;
   }
+  // Allocate a usyscall page
+  if((p->uscall = (struct usyscall*)kalloc()) == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+  
+  p->uscall->pid = p->pid;
 
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
@@ -155,11 +163,15 @@ found:
 static void
 freeproc(struct proc *p)
 {
+  if(p->uscall)
+    kfree((void*)p->uscall);
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
+  
+  //p->uscall->pid = 0;
   p->pagetable = 0;
   p->sz = 0;
   p->pid = 0;
@@ -172,11 +184,12 @@ freeproc(struct proc *p)
 }
 
 // Create a user page table for a given process, with no user memory,
-// but with trampoline and trapframe pages.
+// but with trampoline and trapframe pages. ( & usyscall page )
 pagetable_t
 proc_pagetable(struct proc *p)
 {
   pagetable_t pagetable;
+  //usyscall *uscall;
 
   // An empty page table.
   pagetable = uvmcreate();
@@ -201,7 +214,12 @@ proc_pagetable(struct proc *p)
     uvmfree(pagetable, 0);
     return 0;
   }
-
+  if(mappages(pagetable, USYSCALL, PGSIZE,
+              (uint64)(p->uscall), PTE_R | PTE_U) < 0){
+    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+    uvmfree(pagetable, 0);
+    return 0;
+  }
   return pagetable;
 }
 
@@ -212,6 +230,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
+  uvmunmap(pagetable, USYSCALL, 1, 0);
   uvmfree(pagetable, sz);
 }
 
