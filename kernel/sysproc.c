@@ -66,6 +66,7 @@ sys_sleep(void)
     }
     sleep(&ticks, &tickslock);
   }
+  backtrace();
   release(&tickslock);
   return 0;
 }
@@ -91,3 +92,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64 sys_sigalarm(void){
+  int ticks;
+  uint64 hdlr;
+  argint(0, &ticks);
+  argaddr(1, &hdlr);
+  myproc()->enfn = ticks;
+  myproc()->hdlr = hdlr;
+  
+  return 0;
+}
+
+uint64 sys_sigreturn(void){
+  myproc()->freeyet = 1;
+  *(myproc()->trapframe) = *(myproc()->prev_trapframe);
+  return myproc()->trapframe->a0;
+}
+

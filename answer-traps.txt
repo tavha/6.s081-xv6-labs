@@ -1,0 +1,7 @@
+Q1: Register a2 hold the value 13.
+Q2: In main(), there is no jumpping to f(), instead of a constant value 12,
+    and the same as g().
+Q3: In address 642
+Q4: 58
+Q5: 0x726c6400, no need to change 57616
+Q6: It's undefine behavior.

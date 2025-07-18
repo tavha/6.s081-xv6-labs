@@ -77,9 +77,21 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+    if(p->enfn != 0){
+      p->ticks += 1;
+      if(p->enfn == p->ticks){
+        p->ticks = 0;
+        if(p->freeyet == 1){
+          p->freeyet = 0;
+          *(p->prev_trapframe) = *(p->trapframe);
+          p->trapframe->epc = p->hdlr;
+        }
+      }
+    }
     yield();
-
+  }
+  
   usertrapret();
 }
 
@@ -182,7 +194,7 @@ devintr()
   if((scause & 0x8000000000000000L) &&
      (scause & 0xff) == 9){
     // this is a supervisor external interrupt, via PLIC.
-
+    
     // irq indicates which device interrupted.
     int irq = plic_claim();
 
