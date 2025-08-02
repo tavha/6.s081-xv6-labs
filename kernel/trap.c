@@ -67,6 +67,21 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+  } else if(r_scause() == 15){ // cow page fault
+    char *mem;
+    pte_t *pte;
+    uint64 pa, va = r_stval();
+    
+    if((pte = walk(p->pagetable, PGROUNDDOWN(va), 0)) == 0)
+      panic("uvmcopy: pte should exist");
+      
+    pa = PTE2PA(*pte);
+    
+    mem = kalloc();
+    memmove(mem, (char*)pa, PGSIZE);
+    kfree((void*)pa);
+    *pte = PA2PTE(mem) | PTE_FLAGS(*pte) | PTE_W;
+    
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
